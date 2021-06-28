@@ -1,0 +1,583 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Zha Rui">
+  <meta name="keywords" content="">
+  <title>从傅立叶变换到GCN - Rui的博客</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.4.0/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":true,"baidu":"c8c1d8c8c9c0f884514dc8e004c350cb","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Rui</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="从傅立叶变换到GCN">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-06-28 10:22" pubdate>
+        2021年6月28日 上午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1.3k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      14
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">从傅立叶变换到GCN</h1>
+            
+            <div class="markdown-body">
+              <h3 id="1-傅立叶变换"><a href="#1-傅立叶变换" class="headerlink" title="1. 傅立叶变换"></a>1. 傅立叶变换</h3><p>通过傅立叶变换可以实现信号在时域和谱域之间的转变。我们可以将其看作对信号的拆分，每一个信号都可以拆分成很多不同频率的周期信号的叠加，傅立叶变换则是帮助我们找到这些不同频率的信号，从而在频域解决无法直接从时域空间解决的问题。</p>
+<p><strong>定理：任何周期信号都可以用一系列成谐波关系的正弦曲线来表示</strong></p>
+<p>这里的正弦曲线是$sin(x)$或者$cos(x)$ ，我们可以用欧拉公式将这些正交基统一起来：$e^{-ix} = cos(x) - isin(x)$ </p>
+<p>如此一来，时域信号上的连续傅立叶变换就可以计作：$F(w) = \int_{-\infty}^{+\infty} f(t) e^{-iwt} dt$</p>
+<p><img src="/Users/kashama/Documents/Blog/blog/source/images/FULIER.png" srcset="/img/loading.gif" alt="FULIER" style="zoom:80%;" /></p>
+<h4 id="卷积"><a href="#卷积" class="headerlink" title="卷积"></a>卷积</h4><p>卷积公式：$(f*g)(n) = \int_{-\infty}^{+\infty}f(t)g(n-t)dt = F(w) \cdot G(w)$ </p>
+<p>直观来看，卷积所做的事情就是将信号$g(t)$ 做了一个翻转，然后不断重复”平移 —&gt; 叠加”这个操作，看起来就像卷毛巾一样。</p>
+<p>在信号处理中的因果系统里，系统的响应看作信号$g(t)$ ，这个不难理解：系统最终的输出可以看作不同时间输入信号及对应系统响应相互作用的叠加。那么图上信号处理(Graph Signal Processing)是怎么解释卷积这件事情呢？</p>
+<h3 id="2-GCN1-0-Spectral-Networks"><a href="#2-GCN1-0-Spectral-Networks" class="headerlink" title="2. GCN1.0: Spectral Networks"></a>2. GCN1.0: Spectral Networks</h3><p>spectral domain是想借助图谱的理论来实现拓扑图上的卷积。从研究进程上来看：学者先定义了图上的Fourier Transformation，然后定义了Graph上的卷积操作，最后与深度学习结合提出GCN</p>
+<p>这里我们要先提一个概念，<strong>什么是Spectral Graph Theory?</strong></p>
+<p>简单而言，就是借助于图的Laplacian矩阵 $L=D-A$，求解对应的特征值和特征向量，从而研究图的一些性质。但是为什么要用Laplacian矩阵呢？这个问题比较繁琐需要严格的数学证明，为此我们先记住几个重要的性质即可：</p>
+<ul>
+<li>对于无向图而言，Laplacian矩阵是对称阵；</li>
+<li>Laplacian是半正定矩阵；</li>
+</ul>
+<p>那有了这些性质之后可以看出，Laplacian矩阵可以做特征分解（谱分解），直觉上就可以和Spectral domain相对应。<strong>也就是说，如果想把Fourier变换迁移到Graph上来，核心工作其实就是把拉普拉斯算子的特征函数$e^{-iwt}$ 变为Graph对应的特征向量。</strong></p>
+<p>为此，我们将Laplacian矩阵进行特征分解，得到$L = U\Lambda U^{T}$ 其中$\Lambda = diag (\lambda_1, \lambda_1,… ,\lambda_N) $ , $\lambda_i$ 对应着频率。分解之后的效果且看下图：</p>
+<div align=center>
+  <img src="/Users/kashama/Library/Application Support/typora-user-images/截屏2021-06-28 上午8.36.06.png" srcset="/img/loading.gif" alt="截屏2021-06-28 上午8.36.06" style="zoom: 30%;"/>
+</div>
+
+<p>上面这个例子可以看出来，对于不同的频率，$\lambda$越高，特征向量对应的相邻节点之间的信号差越大。（类似于离散时间傅立叶）</p>
+<p>效仿离散傅立叶变换，我们可以定义$F(\lambda<em>i) = \hat{f}(i) = \sum</em>{i=1}^{N} f(i)u_l(i)$ ，形式上也可以写作 $\hat{f} = U^T x$</p>
+<p><img src="https://www.zhihu.com/equation?tex=+%5Cleft%28%5Cbegin%7Bmatrix%7D+%5Chat%7Bf%7D%28%5Clambda_1%29%5C%5C+%5Chat%7Bf%7D%28%5Clambda_2%29+%5C%5C+%5Cvdots+%5C%5C%5Chat%7Bf%7D%28%5Clambda_N%29+%5Cend%7Bmatrix%7D%5Cright%29%3D%5Cleft%28%5Cbegin%7Bmatrix%7D%5C+u_1%281%29+%26u_1%282%29%26+%5Cdots+%26u_1%28N%29+%5C%5Cu_2%281%29+%26u_2%282%29%26+%5Cdots+%26u_2%28N%29%5C%5C+%5Cvdots+%26%5Cvdots+%26%5Cddots+%26+%5Cvdots%5C%5C+u_N%281%29+%26u_N%282%29%26+%5Cdots+%26u_N%28N%29+%5Cend%7Bmatrix%7D%5Cright%29%5Cleft%28%5Cbegin%7Bmatrix%7Df%281%29%5C%5C+f%282%29+%5C%5C+%5Cvdots+%5C%5Cf%28N%29+%5Cend%7Bmatrix%7D%5Cright%29" srcset="/img/loading.gif" alt="[公式]"></p>
+<p>这里我们假设$N$个节点上有信号$f(1),f(2), …, f(N)$ ，根据Fourier变换，把特征向量$u_1,u_2,…,u_N$视作基向量。这也就定义了从时域到频域的变换：</p>
+<div align=center>
+  <img src="/Users/kashama/Library/Application Support/typora-user-images/截屏2021-06-28 上午9.12.08.png" srcset="/img/loading.gif" alt="截屏2021-06-28 上午9.12.08" style="zoom:33%;" />
+</div>
+
+<p>类似的，我们可以将逆变换写作 $x = U \hat{f}$ 。回到我们的最初目的，<strong>就是要学到一个合适的卷积核，也可以说是滤波器，在频域空间内作用然后inverse到时域空间</strong>。这一过程如下：</p>
+<script type="math/tex; mode=display">
+y = U g_{\theta}(\Lambda)U^T x</script><p>这里的$g_{\theta}(\Lambda)$也就是我们的学习目标。效果如下：</p>
+<div align=center>
+  <img src="/Users/kashama/Library/Application Support/typora-user-images/截屏2021-06-28 上午9.28.41.png" srcset="/img/loading.gif" alt="截屏2021-06-28 上午9.28.41" style="zoom:30%;" />
+</div>
+
+<p>该公式可以进一步化简得到：</p>
+<script type="math/tex; mode=display">
+y = g_{\theta}(U \Lambda U^T)x = g_{\theta}(L)x</script><h4 id="3-GCN2-0-ChebNet"><a href="#3-GCN2-0-ChebNet" class="headerlink" title="3. GCN2.0: ChebNet"></a>3. GCN2.0: ChebNet</h4><p>理论上$g<em>{\theta}(\cdot)$ 可以是任意函数，比如 $g</em>{\theta}(L) = cos(L) = I - \frac{L^2}{2!}+\frac{L^4}{4!} - …$ 但是这样的多项式函数会带来两个问题：</p>
+<ul>
+<li>计算复杂度过高，对于每一个$L$的n次幂，都要计算一次；</li>
+<li>没有localized，$L^n$从拓扑上来看就是考虑到了n阶邻居；</li>
+</ul>
+<p>为此$ChebNet$通过简化多项式函数来很好地解决上述两个问题。具体的idea是这样：首先限制多项式的长度为$k$ ，也就是说只考虑到$ k$ 阶邻居的相互作用；然后对于$L^n$ 我们不显示的计算而是用递归函数来代替它。这样我们就有了：</p>
+<p><img src="/Users/kashama/Library/Application Support/typora-user-images/截屏2021-06-28 上午10.47.12.png" srcset="/img/loading.gif" alt="截屏2021-06-28 上午10.47.12" style="zoom:30%;" /></p>
+<p>这里的递归公式和对$\Lambda$的归一化都是仿照Chebyshev滤波器进行的。这样以来总的复杂度就可以从$O(N^2)$ 降低到$O(KE)$</p>
+<h4 id="4-GCN3-0-GCN"><a href="#4-GCN3-0-GCN" class="headerlink" title="4.GCN3.0: GCN"></a>4.GCN3.0: GCN</h4><p><img src="/Users/kashama/Library/Application Support/typora-user-images/截屏2021-06-28 上午10.50.18.png" srcset="/img/loading.gif" alt="截屏2021-06-28 上午10.50.18" style="zoom:30%;" /></p>
+<p>GCN做的事情实际上就是对Chebyshev滤波器的一个简化，特别地取$K=1$ ，即只考虑到一阶的邻居。值得注意的是，这一版本的GCN相对于ChebNet做了多次简化，这样一来，也就实现到从频谱角度到拓扑空间上的转换，最后的公式可以看作是对一阶邻居信息的聚合。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E5%9B%BE%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C/">图神经网络</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/GCN/">GCN</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%82%85%E7%AB%8B%E5%8F%B6%E5%8F%98%E6%8D%A2/">傅立叶变换</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/06/28/%E4%BA%94%E8%A1%8C/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">五行</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/06/26/Simplifying-Graph-Convolutional-Networks/">
+                        <span class="hidden-mobile">Simplifying Graph Convolutional Networks</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- 不蒜子统计PV -->
+        <span id="busuanzi_container_site_pv" style="display: none">
+            总访问量 
+            <span id="busuanzi_value_site_pv"></span>
+             次
+          </span>
+      
+      
+        <!-- 不蒜子统计UV -->
+        <span id="busuanzi_container_site_uv" style="display: none">
+            总访客数 
+            <span id="busuanzi_value_site_uv"></span>
+             人
+          </span>
+      
+    
+  </div>
+
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.0/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+  
+
+  
+    <!-- MathJax -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        options: {
+          renderActions: {
+            findScript: [10, doc => {
+              document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+                const display = !!node.type.match(/; *mode=display/);
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+                const text = document.createTextNode('');
+                node.parentNode.replaceChild(text, node);
+                math.start = { node: text, delim: '', n: 0 };
+                math.end = { node: text, delim: '', n: 0 };
+                doc.math.push(math);
+              });
+            }, '', false],
+            insertedScript: [200, () => {
+              document.querySelectorAll('mjx-container').forEach(node => {
+                let target = node.parentNode;
+                if (target.nodeName.toLowerCase() === 'li') {
+                  target.parentNode.classList.add('has-jax');
+                }
+              });
+            }, '', false]
+          }
+        }
+      };
+    </script>
+
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3.1.2/es5/tex-svg.js" ></script>
+
+  
+
+
+
+
+
+
+
+
+  
+    <!-- Baidu Analytics -->
+    <script defer>
+      var _hmt = _hmt || [];
+      (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?c8c1d8c8c9c0f884514dc8e004c350cb";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>
